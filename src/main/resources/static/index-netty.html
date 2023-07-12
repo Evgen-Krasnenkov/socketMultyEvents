@@ -53,7 +53,7 @@
   socket.on('connect', function () {
     output('<span class="connect-msg">The client has connected with the server.</span>');
   });
-  socket.on('send', function (data) {
+  socket.on('ttsresponse', function (data) {
     console.log('Received message', data);
     output('<span class="username-msg">Message:</span> ' + data.message);
   });
@@ -74,7 +74,7 @@
     $msg.val('');
     var jsonObject = {message: message, actionTime: new Date()};
     console.log("before func sendMess", jsonObject);
-    socket.emit('send', jsonObject);
+    socket.emit('ttsrequest', jsonObject);
   }
 
   function output(message) {
