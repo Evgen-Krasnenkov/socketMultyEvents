@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8"/>
+  <title>Chat Client</title>
+  <link href="bootstrap.css" rel="stylesheet">
+  <style>
+
+  </style>
+</head>
+<body>
+
+<h1>Chat Client</h1>
+<br/>
+
+<div id="console" class="well"></div>
+
+<form class="well form-inline" onsubmit="return false;">
+  <input id="msg" class="input-xlarge" type="text" placeholder="Type something..."/>
+  <button type="button" onClick="sendMessage()" class="btn" id="send">Send</button>
+  <button type="button" onClick="sendDisconnect()" class="btn">Disconnect</button>
+</form>
+
+<script src="js/socket.io-2.2.0.js"></script>
+<script src="js/moment-2.24.0.min.js"></script>
+<script src="js/jquery-3.3.1.min.js"></script>
+
+<script>
+  let sessionID = '';
+
+  // get session id by request using post method
+  const requestSession = async () => {
+    return fetch('http://localhost:8080/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({}),
+    })
+            .then((response) => response.json());
+  }
+
+  requestSession().then((response) => {
+    console.log(response);
+    sessionID = response.session;
+    console.log(sessionID);
+  })
+
+  var socket = io(`http://localhost:9092/room?session=${sessionID}`, {
+    transports: ['polling', 'websocket']
+  });
+  socket.on('connect', function () {
+    output('<span class="connect-msg">The client has connected with the server.</span>');
+  });
+  socket.on('send', function (data) {
+    console.log('Received message', data);
+    output('<span class="username-msg">Message:</span> ' + data.message);
+  });
+  socket.on('disconnect', function () {
+    output('<span class="disconnect-msg">The client has disconnected!</span>');
+  });
+  socket.on('reconnect_attempt', (attempts) => {
+    console.log('Try to reconnect at ' + attempts + ' attempt(s).');
+  });
+
+  function sendDisconnect() {
+    socket.disconnect();
+  }
+
+  function sendMessage() {
+    var $msg = $('#msg');
+    var message = $msg.val();
+    $msg.val('');
+    var jsonObject = {message: message, actionTime: new Date()};
+    console.log("before func sendMess", jsonObject);
+    socket.emit('send', jsonObject);
+  }
+
+  function output(message) {
+    var currentTime = "<span class='time'>" + moment().format('HH:mm:ss.SSS') + "</span>";
+    var element = $("<div>" + currentTime + " " + message + "</div>");
+    $('#console').prepend(element);
+  }
+
+  $(document).keydown(function (e) {
+    if (e.keyCode == 13) {
+      $('#send').click();
+    }
+  });
+</script>
+</body>
+</html>

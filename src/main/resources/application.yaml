@@ -1,0 +1,6 @@
+logging:
+  level:
+    root: info
+socket:
+  host: localhost
+  port: 9092

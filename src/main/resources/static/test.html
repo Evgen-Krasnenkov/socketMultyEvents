@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- connect to socket.io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+</head>
+<body>
+
+<textarea id="text" cols="30" rows="10"></textarea>
+<button id="send">Send</button>
+
+<script>
+    let sessionID = '';
+
+    // get session id by request using post method
+    const requestSession = async () => {
+        return fetch('http://localhost:8080/session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({}),
+        })
+            .then((response) => response.json());
+    }
+
+    requestSession().then((response) => {
+        console.log(response);
+        sessionID = response.session;
+        console.log(sessionID);
+    })
+
+    const sendMessage = (text) => {
+        console.log('request:', text);
+        // connect to the socket
+        console.log(sessionID);
+        const socket = io.connect(`http://localhost:9092?session=${sessionID}`);
+        // send a message to the server
+        socket.emit('texttospeech', {text});
+        // listen for messages from the server
+        socket.on('texttospeech_result', function (data) {
+            console.log('response:', data);
+        });
+    }
+
+    // listener on button click
+    document.getElementById('send').addEventListener('click', () => {
+        const text = document.getElementById('text').value;
+        if (text !== '') {
+            sendMessage(text);
+        }
+    })
+
+</script>
+
+</body>
+</html>
