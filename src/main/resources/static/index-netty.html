@@ -28,6 +28,7 @@
 
 <script>
   let sessionID = '';
+  let socket;
 
   // get session id by request using post method
   const requestSession = async () => {
@@ -46,25 +47,26 @@
     console.log(response);
     sessionID = response.session;
     console.log(sessionID);
+    establishConnection();
   })
-
-  var socket = io(`http://localhost:9092/room?session=${sessionID}`, {
-    transports: ['polling', 'websocket']
-  });
-  socket.on('connect', function () {
-    output('<span class="connect-msg">The client has connected with the server.</span>');
-  });
-  socket.on('ttsresponse', function (data) {
-    console.log('Received message', data);
-    output('<span class="username-msg">Message:</span> ' + data.message);
-  });
-  socket.on('disconnect', function () {
-    output('<span class="disconnect-msg">The client has disconnected!</span>');
-  });
-  socket.on('reconnect_attempt', (attempts) => {
-    console.log('Try to reconnect at ' + attempts + ' attempt(s).');
-  });
-
+  const establishConnection =  () => {
+    socket = io(`http://localhost:9092/room?session=${sessionID}`, {
+      transports: ['polling', 'websocket']
+    });
+    socket.on('connect', function () {
+      output('<span class="connect-msg">The client has connected with the server.</span>');
+    });
+    socket.on('ttsresponse', function (data) {
+      console.log('Received message', data);
+      output('<span class="username-msg">Message:</span> ' + data.message);
+    });
+    socket.on('disconnect', function () {
+      output('<span class="disconnect-msg">The client has disconnected!</span>');
+    });
+    socket.on('reconnect_attempt', (attempts) => {
+      console.log('Try to reconnect at ' + attempts + ' attempt(s).');
+    });
+  }
   function sendDisconnect() {
     socket.disconnect();
   }
